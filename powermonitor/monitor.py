@@ -1,52 +1,34 @@
-#! /usr/bin/env python
-from popup import Popup, SysTray
+from daemon import DaemonContext
 from time import sleep
-import thread
 
-path="/sys/class/power_supply/BAT0/";
-def get_battery_power():
-	"""gets the power level of the battery [in percent]"""
-	global path;
-	filename=path+"energy_full";
-	fp=open(filename,"r");
-	full=int(fp.read());
-	fp.close();
-	filename=path+"energy_now";
-	fp=open(filename,"r")
-	now=int(fp.read());
-	charge=( float(now)*100 )/float(full);
-	return charge;
+from .notification import notification_factory
+from .query import power_status_factory
 
-def get_battery_status():
-	"""get the status of battery [charging/charged/discharging]"""
-	global path;
-	filename=path+"status";
-	fp=open(filename)
-	status=fp.read()
-	fp.close()
-	return status.rstrip();
 
-def popup(msg):
-    """
-	p=Popup(msg);
-	p.main()
-        """
-    o = SysTray()
-    o.popup(msg)
-        
 
-if __name__=="__main__":
-	while(True):
-            try:
-		charge=int(get_battery_power())
-		status=get_battery_status()
-		if charge == 100 and status != "Discharging":
-			popup("Battery Full. Unplug the charger.")
-		elif charge <=10 and status == "Discharging":
-			popup("Battery Low. Plug in charger. ");
-		sleep(20);	
-            except KeyboardInterrupt:
-                print "Quitting"
-                break
-	
+def monitor_event_loop():
+    SLEEP_INTERVAL = 5
+    BATTERY_FULL_MSG = 'Battery is full. Please unplug the charger to save battery life'
+    LOW_BATTERY_MSG = 'Battery is almost drained. Please plug in the charger'
+    LOW_BATTER_LEVEL = 15
+    power = power_status_factory()
+    notifier = notification_factory()
+    while True:
+        adapter_status = power.get_adapter_status()
+        power_level = power.get_battery_power()
+        if adapter_status == 'Full':
+            notifier.notify_user(BATTERY_FULL_MSG)
+        elif adapter_status == 'Discharging':
+            level = int(power_level)
+            if level <= LOW_BATTER_LEVEL:
+                notifier.notify_user(LOW_BATTERY_MSG)
+        sleep(SLEEP_INTERVAL)
 
+
+def main():
+    with DaemonContext():
+        monitor_event_loop()
+
+
+if __name__ == "__main__":
+    main()

@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+import platform
 
 class Notification(metaclass=ABCMeta):
     APP_NAME = "powermonitor"
@@ -8,19 +9,25 @@ class Notification(metaclass=ABCMeta):
         pass
 
 
-class LinuxNotification(Notification):
-    def __init__(self):
-        import notify2
-        notify2.init(self.APP_NAME)
-        self.notifier = notify2.Notification(self.APP_NAME, message=f"{self.APP_NAME} running")
-        self.notifier.show()
-    
-    def notify_user(self, message):
-        self.notifier.update(self.APP_NAME, message=message)
-        self.notifier.show()
+def get_linux_notification():
+    from .notify_linux import LinuxNotification
+    return LinuxNotification()
 
-    def close(self):
-        self.notifier.close()
+def get_windows_notification():
+    from .notify_windows import WindowsNotification
+    return WindowsNotification()
 
+
+def notification_factory():
+    notification_factory_dict = {
+        "Linux": get_linux_notification,
+        "Windows": get_windows_notification
+    }
+    system = platform.system()
+    try:
+        action = notification_factory_dict[system]
+    except KeyError:
+        raise RuntimeError(f"Platform '{system}' is not supported")
+    return action()
 
 

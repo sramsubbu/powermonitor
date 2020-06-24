@@ -57,7 +57,6 @@ class LinuxPowerStatus(PowerStatus):
     def get_adapter_status(self):
         battery_events = self._get_device_events()
         adapter_status = battery_events['POWER_SUPPLY_STATUS'].strip()
-        print(f"Adapter status: {adapter_status}")
         return adapter_status
         
 
