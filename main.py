@@ -3,7 +3,9 @@ import subprocess
 import shlex
 import signal
 import sys
+import os 
 
+from pathlib import Path 
 from time import sleep
 from daemon import DaemonContext
 
@@ -40,7 +42,7 @@ class DaemonRunner:
             return None
         return int(content)
 
-    def start(self, **daemon_args):
+    def start(self, cwd, **daemon_args):
         if self.is_daemon_running():
             print("Process already running")
             sys.exit(1)
@@ -50,6 +52,7 @@ class DaemonRunner:
             pid = os.getpid()
             with open(self.pid_file,'w') as fp:
                 fp.write(f"{pid}")
+            os.chdir(cwd)
             self.main_loop(**self.main_loop_args)
 
     def stop(self):
@@ -59,27 +62,28 @@ class DaemonRunner:
         pid = self.get_pid()
         os.kill(pid, signal.SIGTERM)
 
-    def restart(self, **daemon_args):
+    def restart(self, cwd, **daemon_args):
         self.stop()
         self.start(**daemon_args)
 
-    def run(self, **daemon_args):
+    def run(self, cwd, **daemon_args):
         argv = sys.argv
         if len(argv) < 2:
             print("Usage: {progname} start|stop|restart")
             sys.exit(1)
         action = argv[1]
         if action == 'start':
-            self.start(**daemon_args)
+            self.start(cwd, **daemon_args)
         elif action == 'stop':
             self.stop()
         elif action == 'restart':
-            self.restart(**daemon_args)
+            self.restart(cwd, **daemon_args)
         else:
             print("Usage: {progname} start|stop|restart")
 
 
 if __name__ == '__main__':
+    CWD = Path.cwd()
     runner = DaemonRunner(PID_FILE, monitor_event_loop)
-    runner.run()
+    runner.run(CWD)
     

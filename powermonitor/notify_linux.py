@@ -1,6 +1,7 @@
 from .notification import Notification
 import notify2
 
+
 class LinuxNotification(Notification):
     def __init__(self):
         notify2.init(self.APP_NAME)
