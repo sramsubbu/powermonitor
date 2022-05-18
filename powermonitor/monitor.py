@@ -1,12 +1,12 @@
-from daemon import DaemonContext
 from time import sleep
 
 from .notification import notification_factory
 from .query import get_status
 
-
 LOW_BATTERY_MSG = "Battery is almost drained. Please plug in the charger"
-BATTERY_FULL_MSG = "Battery is full. Please unplug the charger to save battery life"
+BATTERY_FULL_MSG = """
+Battery is full. Please unplug the charger to save battery life
+""".strip()
 SLEEP_INTERVAL = 5
 BATTERY_FULL_THRESHOLD = 100
 BATTERY_LOW_THRESHOLD = 15
