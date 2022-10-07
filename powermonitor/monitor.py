@@ -1,34 +1,35 @@
-from daemon import DaemonContext
 from time import sleep
 
 from .notification import notification_factory
-from .query import power_status_factory
+from .query import get_status
 
+LOW_BATTERY_MSG = "Battery is almost drained. Please plug in the charger"
+BATTERY_FULL_MSG = """
+Battery is full. Please unplug the charger to save battery life
+""".strip()
+SLEEP_INTERVAL = 5
+BATTERY_FULL_THRESHOLD = 100
+BATTERY_LOW_THRESHOLD = 15
+
+
+def check_battery_status(notifier):
+    status = get_status()
+    if status.percent == BATTERY_FULL_THRESHOLD:
+        if status.power_plugged:
+            notifier.notify_user(BATTERY_FULL_MSG)
+    if status.percent < BATTERY_LOW_THRESHOLD:
+        if not status.power_plugged:
+            notifier.notify_user(LOW_BATTERY_MSG)
 
 
 def monitor_event_loop():
-    SLEEP_INTERVAL = 5
-    BATTERY_FULL_MSG = 'Battery is full. Please unplug the charger to save battery life'
-    LOW_BATTERY_MSG = 'Battery is almost drained. Please plug in the charger'
-    LOW_BATTER_LEVEL = 15
-    power = power_status_factory()
     notifier = notification_factory()
+    notifier.notify_user("Started the app...")
+
     while True:
-        adapter_status = power.get_adapter_status()
-        power_level = power.get_battery_power()
-        if adapter_status == 'Full':
-            notifier.notify_user(BATTERY_FULL_MSG)
-        elif adapter_status == 'Discharging':
-            level = int(power_level)
-            if level <= LOW_BATTER_LEVEL:
-                notifier.notify_user(LOW_BATTERY_MSG)
+        check_battery_status(notifier)
         sleep(SLEEP_INTERVAL)
 
 
-def main():
-    with DaemonContext():
-        monitor_event_loop()
-
-
 if __name__ == "__main__":
-    main()
+    monitor_event_loop()

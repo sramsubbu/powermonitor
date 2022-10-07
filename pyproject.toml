@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "powermonitor"
+version = "0.1.0"
+description = "Monitor the battery power and status of the device and notify user to connect/disconnect charger."
+authors = ["Ramasubramanian S <sramsubu@gmail.com>"]
+license = "GPLv3"
+
+[tool.vulture]
+paths = ["powermonitor"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+[tool.poetry.dev-dependencies]
+pytest = "^7.1.2"
+coverage = "^6.3.3"
+pre-commit = "^2.19.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
