@@ -56,6 +56,14 @@ class DaemonRunner:
         pid = self.get_pid()
         os.kill(pid, signal.SIGTERM)
 
+
+    def status(self, cwd, **daemon_args):
+        if not self.is_daemon_running():
+             print("Daemon is not running")
+             return 
+        pid = self.get_pid()
+        print(f"Daemon is running with pid: {pid}")
+
     def restart(self, cwd, **daemon_args):
         self.stop()
         self.start(**daemon_args)
@@ -72,11 +80,17 @@ class DaemonRunner:
             self.stop()
         elif action == "restart":
             self.restart(cwd, **daemon_args)
+        elif action == "status":
+            self.status(cwd, **daemon_args)
         else:
             print("Usage: {progname} start|stop|restart")  # noqa: T001
 
+def main():
+    CWD = Path.cwd()
+    runner = DaemonRunner(PID_FILE, monitor_event_loop) 
+    runner.run(CWD)
 
 if __name__ == "__main__":
-    CWD = Path.cwd()
-    runner = DaemonRunner(PID_FILE, monitor_event_loop)
-    runner.run(CWD)
+    main()
+
+
